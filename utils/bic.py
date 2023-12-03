@@ -189,18 +189,23 @@ class BaseEstimator(object):
         return score
 
 def is_dag(adjacency_matrix):
-  """Checks if an adjacency matrix is nilpotent.
 
-  Args:
-    adjacency_matrix: A numpy array representing the adjacency matrix.
 
-  Returns:
-    True if the adjacency matrix is nilpotent, False otherwise.
-  """
+    for i in range(len(adjacency_matrix)):
+        power = np.linalg.matrix_power(adjacency_matrix, i + 1)
+        if np.trace(power) != 0:
+            return False
 
-  for i in range(len(adjacency_matrix)):
-    power = np.linalg.matrix_power(adjacency_matrix, i + 1)
-    if np.trace(power) != 0:
-      return False
+    return True
+def calculate_bic_score(graph, base_estimate):
+    nodes = list(base_estimate.state_names.keys())
 
-  return True
+    num_nodes = len(nodes)
+    bic_score = 0
+    for k in range(num_nodes):
+        parents = np.nonzero(graph[:,k])[0]
+        parents = [nodes[k] for k in parents]
+        if nodes[k] in parents:
+            parents.remove(nodes[k])
+        bic_score += base_estimate.local_score(nodes[k], parents)
+    return bic_score
